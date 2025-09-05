@@ -1,10 +1,11 @@
 {
-    "INIT" : [
-
-    ],
+    "INIT" : {
+        "NAME" : "VALUE",
+        "NOVALUE" : "NO"
+    },
 
     "RUN" : [
-
+        "NAME=", "run"
     ],
 
     "END" : [
