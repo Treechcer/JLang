@@ -1,8 +1,9 @@
-$global:version = "0.1.0"
-
 param(
     [string]$file = "code.json"
 )
+
+
+$global:version = "0.2.0"
 
 . .\init.ps1
 . .\run.ps1
@@ -31,7 +32,7 @@ if (-not $valid){
 else {
     $variables = initV "$file"
 
-    $variables.GetType()
+    #$variables.GetType()
 
     parse "$file" $variables
 }

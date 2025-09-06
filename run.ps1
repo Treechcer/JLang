@@ -6,17 +6,138 @@ function parse{
         [PSCustomObject]$variables
     )
     $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
-    $variables
+    #$variables
     foreach ($line in $JSON.RUN){
+
+        $line = $line -replace "\s", ""
+
         $split = $line.split("=")[0]
-        if ($variables.PSObject.Properties.Name -contains $split){
-            Write-Host $variables
-            Write-Host "TEST $line"
-            if ($line.Split("=")[1] -eq ""){
-                raiseErr "error, this variable doesn't exist"
+        $val = $line.split("=")[1]
+        $varExists = contains $split
+        if ($varExists){
+            if ($val -match "\+" -or $val -match "-" -or $val -match "\*" -or $val -match "/"){
+                $things = $val -split "[-+*/]"
+                $operators = $val -split "[^-+*/]"
+
+                $temp = @()
+                foreach ($thing in $things){
+                    if (-not ($thing -eq "")){
+                        $temp += $thing
+                    }
+                }
+
+                $things = $temp
+
+                $temp = @()
+                foreach ($operator in $operators){
+                    if (-not ($operator -eq "")){
+                        $temp += $operator
+                    }
+                }
+
+                $operators = $temp
+
+                for ($i = 0; $i -lt $things.Length; $i++){
+                    $thing = $things[$i]
+                    if ($thing -is [string]){
+                        if (contains $thing){
+                            $things[$i] = getValue $thing
+                        }
+                        else{
+                            try {
+                                $thing = [int] $thing
+                            }
+                            catch {
+                                raiseErr 3
+                            }
+                        }
+                    }
+                }
+                
+                $expr = ""
+                for($i = 0; $i -lt $operators.Length-1; $i++){
+                    $expr += [string]$things[$i] + [string]$operators[$i]
+                }
+                $expr += [string]$things[$things.Length - 1]
+
+                $value = Invoke-Expression $expr
             }
-            $variables.$split = $line.Split("=")[1]
-            Write-Host $variables
+            else{
+                $value = $line.Split("=")[1]
+                if ($value -eq ""){
+                    raiseErr 1
+                }
+
+                if ($value[0] -eq "'" -and $value[$value.Length-1] -eq "'"){
+                    $value = $value.split("'")[1]
+                }
+            }
+            changeVar $split $value
+        }
+        else{
+            if (-not ($line -match "=")){
+                raiseErr 2
+            }
+
+            $value = $line.Split("=")[1]
+            if ($value -eq ""){
+                raiseErr 1
+            }
         }
     }
+
+    writeVars
+}
+
+function writeVars{
+    foreach ($var in $variables){
+        Write-Host $var
+    }
+}
+
+function getValue{
+    param(
+        [string]$name
+    )
+
+    foreach($var in $variables){
+        if ($var.Name -eq $name){
+            return $var.Value
+        }
+    }
+}
+
+function changeVar{
+    param(
+        [string]$varName,
+        $value
+    )
+
+    $found = $false
+    foreach ($var in $variables){
+        if ($var.Name -eq $varName){
+            $var.Value = $value
+            $var.Type = $value.GetType().Name
+            $found = $true
+            break
+        }
+    }
+
+    if (-not $found){
+        raiseErr 3
+    }
+}
+
+function contains {
+    param(
+        [string]$split
+    )
+
+    foreach($var in $variables){
+        if ($var.Name -eq $split){
+            return $true
+        }
+    }
+
+    return $false
 }

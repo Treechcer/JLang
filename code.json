@@ -1,11 +1,11 @@
 {
     "INIT" : {
-        "NAME" : "VALUE",
-        "NOVALUE" : "NO"
+        "bam" : 10,
+        "bum" : 11
     },
 
     "RUN" : [
-        "NAME=", "run"
+        "bam=bam+7*7/4-1"
     ],
 
     "END" : [

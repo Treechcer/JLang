@@ -6,12 +6,18 @@ function initV {
     param (
         [string]$file
     )
-    
-    $variables = @{}
 
     $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
 
-    $variables = $JSON.init
+    $variables = @()
+
+    foreach ($prop in $JSON.INIT.PSObject.Properties) {
+        $variables += [PSCustomObject]@{
+            Name  = $prop.Name
+            Value = $prop.Value
+            Type  = $prop.Value.GetType().Name
+        }
+    }
 
     return $variables
 }
