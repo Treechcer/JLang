@@ -7,9 +7,9 @@ function parse{
     )
     $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
     #$variables
-    foreach ($line in $JSON.RUN){
+    foreach ($lineRaw in $JSON.RUN){
 
-        $line = $line -replace "\s", ""
+        $line = $lineRaw -replace "\s", ""
 
         $split = $line.split("=")[0]
         $val = $line.split("=")[1]
@@ -55,9 +55,11 @@ function parse{
                 }
                 
                 $expr = ""
-                for($i = 0; $i -lt $operators.Length-1; $i++){
+                for($i = 0; $i -lt $operators.Length; $i++){
                     $expr += [string]$things[$i] + [string]$operators[$i]
                 }
+
+                $operators
                 $expr += [string]$things[$things.Length - 1]
 
                 $value = Invoke-Expression $expr
@@ -75,6 +77,32 @@ function parse{
             changeVar $split $value
         }
         else{
+            if ($lineRaw -is [pscustomobject]) {
+                if ($lineRaw.PSObject.Properties.Name -contains "IF") {
+                    $lineRaw.IF.CONDITION
+
+                    $conditions = [string]$lineRaw.IF.CONDITION -split "[\<\><=>=]"
+                    "SA"
+                    $conditions
+
+                    $temp = @()
+                    foreach ($thing in $conditions){
+                        if (-not ($thing -eq "")){
+                            $thing = $thing -replace "\s", ""
+                            $temp += $thing
+                        }
+                    }
+
+                    $conditions = $temp
+                    
+                    ##TODO FINISH THIS PART
+
+                    foreach($condition in $conditions){
+
+                    }
+                }
+            }
+
             if (-not ($line -match "=")){
                 raiseErr 2
             }
