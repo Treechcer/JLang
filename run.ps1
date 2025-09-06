@@ -71,7 +71,6 @@ function executeCode{
                 $expr += [string]$things[$i] + [string]$operators[$i]
             }
 
-            $operators
             $expr += [string]$things[$things.Length - 1]
 
             $value = Invoke-Expression $expr
@@ -91,8 +90,6 @@ function executeCode{
     else{
         if ($lineRaw -is [pscustomobject]) {
             if ($lineRaw.PSObject.Properties.Name -contains "IF") {
-                $lineRaw.IF.CONDITION
-
                 $conditions = [string]$lineRaw.IF.CONDITION -split "[\<\>\<=\>=]"
                 $operators = [string]$lineRaw.IF.CONDITION -split "[^\<\>\<=\>=]"
 
@@ -120,8 +117,6 @@ function executeCode{
                     $condition = $conditions[$i]
                     if (contains $condition){
                         $conditions[$i] = getValue $condition
-                        "___???"
-                        Write-Host (getValue $condition)
                     }
                     elseif ($condition[0] -eq "'" -and $condition[$condition.Length - 1] -eq "'") {
                         #TODO add string comparisons...
@@ -136,9 +131,7 @@ function executeCode{
                     }
                 }
 
-                $value = $true
-
-                $conditions | ForEach-Object { Write-Host "$_ : $($_ -is [int])" }
+                $value = $false
 
                 if ($operators[0] -eq ">"){
                     $value = $conditions[0] -gt $conditions[1]
@@ -156,13 +149,13 @@ function executeCode{
                     $value = $conditions[0] -eq $conditions[1]
                 }
 
-                $value
+                #$value
 
                 if ($value){
-                    executeCode $lineRaw.IF.CODE
+                    foreach ($parts in $lineRaw.IF.CODE){
+                        executeCode $parts
+                    } 
                 }
-
-                $conditions
             }
         }
 
