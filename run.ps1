@@ -9,112 +9,172 @@ function parse{
     #$variables
     foreach ($lineRaw in $JSON.RUN){
 
-        $line = $lineRaw -replace "\s", ""
+        executeCode $lineRaw
 
-        $split = $line.split("=")[0]
-        $val = $line.split("=")[1]
-        $varExists = contains $split
-        if ($varExists){
-            if ($val -match "\+" -or $val -match "-" -or $val -match "\*" -or $val -match "/"){
-                $things = $val -split "[-+*/]"
-                $operators = $val -split "[^-+*/]"
+    }
+
+    writeVars
+}
+
+function executeCode{
+    param(
+        $lineRaw
+    )
+    $line = $lineRaw -replace "\s", ""
+
+    $split = $line.split("=")[0]
+    $val = $line.split("=")[1]
+    $varExists = contains $split
+    writeVars
+    if ($varExists){
+        if ($val -match "\+" -or $val -match "-" -or $val -match "\*" -or $val -match "/"){
+            $things = $val -split "[-+*/]"
+            $operators = $val -split "[^-+*/]"
+
+            $temp = @()
+            foreach ($thing in $things){
+                if (-not ($thing -eq "")){
+                    $temp += $thing
+                }
+            }
+
+            $things = $temp
+
+            $temp = @()
+            foreach ($operator in $operators){
+                if (-not ($operator -eq "")){
+                    $temp += $operator
+                }
+            }
+
+            $operators = $temp
+
+            for ($i = 0; $i -lt $things.Length; $i++){
+                $thing = $things[$i]
+                if ($thing -is [string]){
+                    if (contains $thing){
+                        $things[$i] = getValue $thing
+                    }
+                    else{
+                        try {
+                            $thing = [int] $thing
+                        }
+                        catch {
+                            raiseErr 3
+                        }
+                    }
+                }
+            }
+            
+            $expr = ""
+            for($i = 0; $i -lt $operators.Length; $i++){
+                $expr += [string]$things[$i] + [string]$operators[$i]
+            }
+
+            $operators
+            $expr += [string]$things[$things.Length - 1]
+
+            $value = Invoke-Expression $expr
+        }
+        else{
+            $value = $line.Split("=")[1]
+            if ($value -eq ""){
+                raiseErr 1
+            }
+
+            if ($value[0] -eq "'" -and $value[$value.Length-1] -eq "'"){
+                $value = $value.split("'")[1]
+            }
+        }
+        changeVar $split $value
+    }
+    else{
+        if ($lineRaw -is [pscustomobject]) {
+            if ($lineRaw.PSObject.Properties.Name -contains "IF") {
+                $lineRaw.IF.CONDITION
+
+                $conditions = [string]$lineRaw.IF.CONDITION -split "[\<\>\<=\>=]"
+                $operators = [string]$lineRaw.IF.CONDITION -split "[^\<\>\<=\>=]"
 
                 $temp = @()
-                foreach ($thing in $things){
+                foreach ($thing in $conditions){
                     if (-not ($thing -eq "")){
+                        $thing = ($thing -replace "\s", "")
                         $temp += $thing
                     }
                 }
 
-                $things = $temp
+                $conditions = $temp
 
                 $temp = @()
-                foreach ($operator in $operators){
-                    if (-not ($operator -eq "")){
-                        $temp += $operator
+                foreach ($thing in $operators){
+                    if (-not ($thing -eq "")){
+                        $thing = ($thing -replace "\s", "")
+                        $temp += $thing
                     }
                 }
 
                 $operators = $temp
 
-                for ($i = 0; $i -lt $things.Length; $i++){
-                    $thing = $things[$i]
-                    if ($thing -is [string]){
-                        if (contains $thing){
-                            $things[$i] = getValue $thing
+                for ($i = 0; $i -lt $conditions.Length; $i++){
+                    $condition = $conditions[$i]
+                    if (contains $condition){
+                        $conditions[$i] = getValue $condition
+                        "___???"
+                        Write-Host (getValue $condition)
+                    }
+                    elseif ($condition[0] -eq "'" -and $condition[$condition.Length - 1] -eq "'") {
+                        #TODO add string comparisons...
+                    }
+                    else{
+                        try {
+                            $conditions[$i] = [int]($condition.Trim())
                         }
-                        else{
-                            try {
-                                $thing = [int] $thing
-                            }
-                            catch {
-                                raiseErr 3
-                            }
+                        catch {
+                            raiseErr 3
                         }
                     }
                 }
-                
-                $expr = ""
-                for($i = 0; $i -lt $operators.Length; $i++){
-                    $expr += [string]$things[$i] + [string]$operators[$i]
+
+                $value = $true
+
+                $conditions | ForEach-Object { Write-Host "$_ : $($_ -is [int])" }
+
+                if ($operators[0] -eq ">"){
+                    $value = $conditions[0] -gt $conditions[1]
+                }
+                elseif ($operators[0] -eq ">="){
+                    $value = $conditions[0] -ge $conditions[1]
+                }
+                elseif ($operators[0] -eq "<"){
+                    $value = $conditions[0] -lt $conditions[1]
+                }
+                elseif ($operators[0] -eq "<="){
+                    $value = $conditions[0] -le $conditions[1]
+                }
+                elseif ($operators[0] -eq "=="){
+                    $value = $conditions[0] -eq $conditions[1]
                 }
 
-                $operators
-                $expr += [string]$things[$things.Length - 1]
+                $value
 
-                $value = Invoke-Expression $expr
+                if ($value){
+                    executeCode $lineRaw.IF.CODE
+                }
+
+                $conditions
             }
-            else{
-                $value = $line.Split("=")[1]
-                if ($value -eq ""){
-                    raiseErr 1
-                }
-
-                if ($value[0] -eq "'" -and $value[$value.Length-1] -eq "'"){
-                    $value = $value.split("'")[1]
-                }
-            }
-            changeVar $split $value
         }
-        else{
-            if ($lineRaw -is [pscustomobject]) {
-                if ($lineRaw.PSObject.Properties.Name -contains "IF") {
-                    $lineRaw.IF.CONDITION
 
-                    $conditions = [string]$lineRaw.IF.CONDITION -split "[\<\><=>=]"
-                    "SA"
-                    $conditions
+        if (-not ($line -match "=")){
+            raiseErr 2
+        }
 
-                    $temp = @()
-                    foreach ($thing in $conditions){
-                        if (-not ($thing -eq "")){
-                            $thing = $thing -replace "\s", ""
-                            $temp += $thing
-                        }
-                    }
-
-                    $conditions = $temp
-                    
-                    ##TODO FINISH THIS PART
-
-                    foreach($condition in $conditions){
-
-                    }
-                }
-            }
-
-            if (-not ($line -match "=")){
-                raiseErr 2
-            }
-
-            $value = $line.Split("=")[1]
-            if ($value -eq ""){
-                raiseErr 1
-            }
+        $value = $line.Split("=")[1]
+        if ($value -eq ""){
+            raiseErr 1
         }
     }
-
-    writeVars
 }
 
 function writeVars{
@@ -128,6 +188,8 @@ function getValue{
         [string]$name
     )
 
+    $name = $name -replace "\s", ""
+
     foreach($var in $variables){
         if ($var.Name -eq $name){
             return $var.Value
@@ -140,6 +202,8 @@ function changeVar{
         [string]$varName,
         $value
     )
+
+    $varName = $varName -replace "\s", ""
 
     $found = $false
     foreach ($var in $variables){
@@ -160,6 +224,8 @@ function contains {
     param(
         [string]$split
     )
+
+    $split = $split -replace "\s", ""
 
     foreach($var in $variables){
         if ($var.Name -eq $split){
