@@ -5,31 +5,13 @@
     },
 
     "RUN" : [
-        {"IF" : {
-            "CONDITION" : "bam == 10",
-            "CODE" : [
-                "bum = 10 * 2", "bum = 10 * 3"
-            ]
-        },
-        "ELSEIF" : [
-            {
-                "CONDITION" : "bum < 10",
+        {
+            "WHILE" : {
+                "CONDITION" : "bum < 1000",
                 "CODE" : [
-                    "bum = 10 * 2"
-                ]
-            },
-            {
-                "CONDITION" : "bum < 10",
-                "CODE" : [
-                    "bum = 10 * 5"
+                    "bum = bum + 1"
                 ]
             }
-        ],
-            "ELSE" : {
-                "CODE" : [
-                    "bum = 10 * 69"
-                ]
-            }    
         }
     ],
 

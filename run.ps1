@@ -91,7 +91,7 @@ function executeCode{
         if ($lineRaw -is [pscustomobject]) {
             if ($lineRaw.PSObject.Properties.Name -contains "IF") {
 
-                $value = makeIF $lineRaw.IF.CONDITION $lineRaw.IF.CODE
+                $value = makeIF $lineRaw.IF.CONDITION
 
                 if ($value){
                     foreach ($parts in $lineRaw.IF.CODE){
@@ -100,7 +100,7 @@ function executeCode{
                 }
                 if (-not $value -and $lineRaw.PSObject.Properties.Name -contains "ELSEIF") {
                     for ($i = 0; $i -lt $lineRaw.ELSEIF.Length; $i++){
-                        $value = makeIF $lineRaw.ELSEIF[$i].CONDITION $lineRaw.ELSEIF.CODE
+                        $value = makeIF $lineRaw.ELSEIF[$i].CONDITION
                         if ($value){
                             foreach ($parts in $lineRaw.ELSEIF[$i].CODE){
                                 executeCode $parts
@@ -113,6 +113,15 @@ function executeCode{
                     foreach ($parts in $lineRaw.ELSE.CODE){
                         executeCode $parts
                     }
+                }
+            }
+            elseif ($lineRaw.PSObject.Properties.Name -contains "WHILE") {
+                $value = makeIF $lineRaw.WHILE.CONDITION
+                while ($value) {
+                    foreach ($parts in $lineRaw.WHILE.CODE){
+                        executeCode $parts
+                    }
+                    $value = makeIF $lineRaw.WHILE.CONDITION
                 }
             }
         }
@@ -130,8 +139,7 @@ function executeCode{
 
 function makeIF {
     param(
-        $CONDITION,
-        $CODE
+        $CONDITION
     )
     $conditions = [string]$CONDITION -split "[\<\>\<=\>=]"
     $operators = [string]$CONDITION -split "[^\<\>\<=\>=]"
