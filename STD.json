@@ -1,0 +1,30 @@
+{
+    "IMPORT" : [
+
+    ],
+
+    "INIT" : {
+
+    },
+
+    "RUN" : [
+
+    ],
+
+    "END" : [
+
+    ],
+
+    "FUNCTIONS" : [
+        {
+            "_PRINT" : {
+                "ARGUMETNS" : {
+                    "PRINTABLE" : "STR, INT, FLOAT"
+                },
+                "CODE" : [
+                    "OUT PRINTABLE"
+                ]
+            }
+        } 
+    ]
+}

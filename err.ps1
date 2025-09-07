@@ -16,7 +16,13 @@ function raiseErr{
             $errMessage = "you have to use real variables"
         }
         4{
-            $errMessage = "you have to use real variables"
+            $errMessage = "you don't have STD (standart) library"
+        }
+        5{
+            $errMessage = "functions have to start with '_'"
+        }
+        6{
+            $errMessage = "invalid function name"
         }
         Default {
             "WRONG ERROR CODE"

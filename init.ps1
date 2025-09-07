@@ -21,3 +21,23 @@ function initV {
 
     return $variables
 }
+
+function initF {
+    param (
+        [string]$file
+    )
+
+    $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
+
+    $functions = @()
+    for ($i = 0; $i -lt $JSON.FUNCTIONS.Length; $i++) {
+        foreach ($prop in $JSON.FUNCTIONS[$i].PSObject.Properties){
+            if ($prop.Name[0] -ne "_"){
+                raiseErr 5
+            }
+            $functions += $prop.Name
+        }
+    }
+
+    return $functions
+}

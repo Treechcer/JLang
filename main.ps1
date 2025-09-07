@@ -3,7 +3,7 @@ param(
 )
 
 
-$global:version = "0.4.1"
+$global:version = "0.4.2"
 
 . .\init.ps1
 . .\run.ps1
@@ -26,13 +26,25 @@ for ($i = 0; $i -lt $file.Length; $i++){
 
 }
 
+if (-not (Test-Path -Path "STD.json")){
+    raiseErr 4
+}
+
 if (-not $valid){
     Write-Host "You have to parse JSON in not other formats + file that exists"
 }
 else {
     $variables = initV "$file"
 
+    $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
+
+    foreach($import in $JSON.IMPORT){
+        $functions = initF "$import.json"
+    }
+
+    $functions += initF "$file"
+
     #$variables.GetType()
 
-    parse "$file" $variables
+    parse "$file" $variables $functions
 }

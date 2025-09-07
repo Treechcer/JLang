@@ -1,18 +1,15 @@
 {
+    "IMPORT" : [
+        "STD"    
+    ],
+
     "INIT" : {
         "bam" : 9,
         "bum" : 11
     },
 
     "RUN" : [
-        {
-            "WHILE" : {
-                "CONDITION" : "bum < 1000",
-                "CODE" : [
-                    "bum = bum + 1"
-                ]
-            }
-        }
+        "_PRINT 'test'"
     ],
 
     "END" : [
@@ -20,6 +17,6 @@
     ],
 
     "FUNCTIONS" : [
-        
+
     ]
 }

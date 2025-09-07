@@ -3,7 +3,8 @@
 function parse{
     param(
         [string]$file,
-        [PSCustomObject]$variables
+        [PSCustomObject]$variables,
+        $functions
     )
     $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
     #$variables
@@ -126,12 +127,60 @@ function executeCode{
             }
         }
 
-        if (-not ($line -match "=")){
+        $isNotVar = $true
+
+        if($lineRaw[0] -eq "_"){
+            $exists = $false
+            $fName = $($lineRaw.split(' '))[0]
+            foreach ($f in $functions){
+                if ($fName -eq $f){
+                    $exists = $true
+                    break
+                }
+            }
+            if (-not $exists){
+                raiseErr 6
+            }
+
+            $imports = @()
+            $imports += ($file.split(".")[0])
+            $imports += $JSON.IMPORT
+
+            $codeFunc
+
+            foreach ($fileJ in $imports){
+                $tempJSON = Get-Content -Path "$fileJ.json" -Raw | ConvertFrom-Json
+
+                foreach ($func in $tempJSON.FUNCTIONS) {
+                    foreach ($prop in $func.PSObject.Properties) {
+                        if ($prop.Name -eq $fName){
+                            $codeFunc = $prop.Value.CODE
+
+                            #TODO : ADD FUNCTION PARAMETERS!!
+                        }
+                    }
+                }
+            }
+
+            foreach($coder in $codeFunc){
+                if (($coder.split(" ")[0]) -eq "OUT"){
+                    Write-Host "test"
+                }
+                else{
+                    executeCode $coder
+                }
+            }
+        }
+        else{
+            $isNotVar = $false
+        }
+
+        if (-not ($line -match "=") -and -not ($isNotVar)){
             raiseErr 2
         }
 
         $value = $line.Split("=")[1]
-        if ($value -eq ""){
+        if ($value -eq "" -and -not ($isNotVar)){
             raiseErr 1
         }
     }
