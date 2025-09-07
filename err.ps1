@@ -24,6 +24,12 @@ function raiseErr{
         6{
             $errMessage = "invalid function name"
         }
+        7{
+            $errMessage = "you have to have valid function input"
+        }
+        8{
+            $errMessage = "this function doens't accept this type of variable"
+        }
         Default {
             "WRONG ERROR CODE"
             Exit 1

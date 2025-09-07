@@ -3,7 +3,7 @@ param(
 )
 
 
-$global:version = "0.4.2"
+$global:version = "0.5.0"
 
 . .\init.ps1
 . .\run.ps1
@@ -38,8 +38,10 @@ else {
 
     $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
 
+    $functions = @()
+
     foreach($import in $JSON.IMPORT){
-        $functions = initF "$import.json"
+        $functions += initF "$import.json"
     }
 
     $functions += initF "$file"

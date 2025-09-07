@@ -10,16 +10,17 @@ function parse{
     #$variables
     foreach ($lineRaw in $JSON.RUN){
 
-        executeCode $lineRaw
+        executeCode $lineRaw $variables
 
     }
 
-    writeVars
+    writeVars $variables
 }
 
 function executeCode{
     param(
-        $lineRaw
+        $lineRaw,
+        $variables
     )
     $line = $lineRaw -replace "\s", ""
 
@@ -146,7 +147,10 @@ function executeCode{
             $imports += ($file.split(".")[0])
             $imports += $JSON.IMPORT
 
-            $codeFunc
+            $codeFunc = ""
+            #$JSONname = ""
+            $laterArgs = @()
+            $passable = @{}
 
             foreach ($fileJ in $imports){
                 $tempJSON = Get-Content -Path "$fileJ.json" -Raw | ConvertFrom-Json
@@ -154,20 +158,107 @@ function executeCode{
                 foreach ($func in $tempJSON.FUNCTIONS) {
                     foreach ($prop in $func.PSObject.Properties) {
                         if ($prop.Name -eq $fName){
+                            #$JSONname = "$fileJ.json"
+
                             $codeFunc = $prop.Value.CODE
 
-                            #TODO : ADD FUNCTION PARAMETERS!!
+                            $arguments = $prop.Value.ARGUMENTS
+
+                            $laterArgs = $arguments
+
+                            foreach ($arg in $arguments.PSObject.Properties) {
+                                $key = $arg.Name
+                                $value = $arg.Value
+                                $passable[$key] = $value
+                            }
+
+                            $arguments = $arguments.PSObject.Properties.Count
+
+                            $count = 0
+                            foreach($arg in $arguments){
+                                $count++
+                            }
                         }
                     }
                 }
             }
 
+            $vars = @()
             foreach($coder in $codeFunc){
                 if (($coder.split(" ")[0]) -eq "OUT"){
                     Write-Host "test"
                 }
                 else{
-                    executeCode $coder
+                    $params = @()
+                    $sub = $lineRaw.split(" ")
+
+                    for ($i = 1; $i -lt $sub.Length; $i++){
+                        #"------"
+                        #$sub[$i]
+                        #"------"
+
+                        #$passable
+                        if ($sub[$i][0] -eq "'" -and $sub[$i][$sub.Length[$i] - 1] -eq "'"){
+                            $params += $sub[$i].split("'")[1]
+                            
+                            foreach ($prop in $laterArgs.PSObject.Properties) {
+
+                                $types = $prop.Value.split(",")
+
+                                for ($i = 0; $i -lt $types.Length - 1; $i++){
+                                    $types[$i] = ($types[$i] -replace "\s", "")
+                                }
+
+                                if (-not ($types -contains "STR")){
+                                    raiseErr 8
+                                }
+
+                                $vars += [PSCustomObject]@{
+                                    Name  = $prop.Name
+                                    Value = $sub[$i].split("'")[1]
+                                    Type  = $prop.Value.GetType().Name
+                                }
+                            }
+                        }
+                        else{
+                            if (contains ($sub[$i])){
+                                $variablesTemp = @{}
+                                foreach ($v in $variables) {
+                                    $variablesTemp[$v.Name] = $v.Value
+                                }
+                                $sub[$i] = $variablesTemp[$sub[$i]]
+
+                                #TODO MAKE THIS WORK NIFASNBFOABFOSAJD"AIGADIGBALODASKL
+                            }
+                            else {
+                                try {
+                                    $sub[$i] = [int] $sub[$i]
+                                    foreach ($prop in $laterArgs.PSObject.Properties) {
+                                        $types = $prop.Value.split(",")
+
+                                        for ($y = 0; $y -lt $types.Length - 1; $y++){
+                                            $types[$y] = ($types[$y] -replace "\s", "")
+                                        }
+
+                                        if (-not ($types -contains "INT")){
+                                            raiseErr 8
+                                        }
+
+                                        $vars += [PSCustomObject]@{
+                                            Name  = $prop.Name
+                                            Value = $sub[$i]
+                                            Type  = $prop.Value.GetType().Name
+                                        }
+                                    }
+                                }
+                                catch {
+                                    raiseErr 3
+                                }
+                            }
+                        }
+                    }
+
+                    executeCode $coder $vars
                 }
             }
         }
@@ -184,6 +275,8 @@ function executeCode{
             raiseErr 1
         }
     }
+
+    writeVars $variables
 }
 
 function makeIF {
@@ -253,7 +346,10 @@ function makeIF {
 }
 
 function writeVars{
-    foreach ($var in $variables){
+    param(
+        $v
+    )
+    foreach ($var in $v){
         Write-Host $var
     }
 }

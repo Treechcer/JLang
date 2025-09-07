@@ -18,8 +18,9 @@
     "FUNCTIONS" : [
         {
             "_PRINT" : {
-                "ARGUMETNS" : {
-                    "PRINTABLE" : "STR, INT, FLOAT"
+                "ARGUMENTS" : {
+                    "PRINTABLE" : "STR, INT, FLOAT",
+                    "PRINTABLE1" : "STR, INT, FLOAT"
                 },
                 "CODE" : [
                     "OUT PRINTABLE"

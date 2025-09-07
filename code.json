@@ -9,14 +9,24 @@
     },
 
     "RUN" : [
-        "_PRINT 'test'"
+        "_TEST 17"
     ],
 
     "END" : [
 
     ],
 
-    "FUNCTIONS" : [
 
+    "FUNCTIONS" : [
+        {
+            "_TEST" : {
+                "ARGUMENTS" : {
+                    "ARG" : "STR, INT, FLOAT"
+                },
+                "CODE" : [
+                    "ARG = ARG + 1"
+                ]
+            }
+        } 
     ]
 }
