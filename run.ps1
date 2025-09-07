@@ -25,7 +25,7 @@ function executeCode{
     $split = $line.split("=")[0]
     $val = $line.split("=")[1]
     $varExists = contains $split
-    writeVars
+    #writeVars
     if ($varExists){
         if ($val -match "\+" -or $val -match "-" -or $val -match "\*" -or $val -match "/"){
             $things = $val -split "[-+*/]"
@@ -90,71 +90,29 @@ function executeCode{
     else{
         if ($lineRaw -is [pscustomobject]) {
             if ($lineRaw.PSObject.Properties.Name -contains "IF") {
-                $conditions = [string]$lineRaw.IF.CONDITION -split "[\<\>\<=\>=]"
-                $operators = [string]$lineRaw.IF.CONDITION -split "[^\<\>\<=\>=]"
 
-                $temp = @()
-                foreach ($thing in $conditions){
-                    if (-not ($thing -eq "")){
-                        $thing = ($thing -replace "\s", "")
-                        $temp += $thing
-                    }
-                }
-
-                $conditions = $temp
-
-                $temp = @()
-                foreach ($thing in $operators){
-                    if (-not ($thing -eq "")){
-                        $thing = ($thing -replace "\s", "")
-                        $temp += $thing
-                    }
-                }
-
-                $operators = $temp
-
-                for ($i = 0; $i -lt $conditions.Length; $i++){
-                    $condition = $conditions[$i]
-                    if (contains $condition){
-                        $conditions[$i] = getValue $condition
-                    }
-                    elseif ($condition[0] -eq "'" -and $condition[$condition.Length - 1] -eq "'") {
-                        #TODO add string comparisons...
-                    }
-                    else{
-                        try {
-                            $conditions[$i] = [int]($condition.Trim())
-                        }
-                        catch {
-                            raiseErr 3
-                        }
-                    }
-                }
-
-                $value = $false
-
-                if ($operators[0] -eq ">"){
-                    $value = $conditions[0] -gt $conditions[1]
-                }
-                elseif ($operators[0] -eq ">="){
-                    $value = $conditions[0] -ge $conditions[1]
-                }
-                elseif ($operators[0] -eq "<"){
-                    $value = $conditions[0] -lt $conditions[1]
-                }
-                elseif ($operators[0] -eq "<="){
-                    $value = $conditions[0] -le $conditions[1]
-                }
-                elseif ($operators[0] -eq "=="){
-                    $value = $conditions[0] -eq $conditions[1]
-                }
-
-                #$value
+                $value = makeIF $lineRaw.IF.CONDITION $lineRaw.IF.CODE
 
                 if ($value){
                     foreach ($parts in $lineRaw.IF.CODE){
                         executeCode $parts
                     } 
+                }
+                if (-not $value -and $lineRaw.PSObject.Properties.Name -contains "ELSEIF") {
+                    for ($i = 0; $i -lt $lineRaw.ELSEIF.Length; $i++){
+                        $value = makeIF $lineRaw.ELSEIF[$i].CONDITION $lineRaw.ELSEIF.CODE
+                        if ($value){
+                            foreach ($parts in $lineRaw.ELSEIF[$i].CODE){
+                                executeCode $parts
+                            }
+                            break
+                        }
+                    }
+                }
+                if (-not $value -and $lineRaw.PSObject.Properties.Name -contains "ELSE"){
+                    foreach ($parts in $lineRaw.ELSE.CODE){
+                        executeCode $parts
+                    }
                 }
             }
         }
@@ -168,6 +126,73 @@ function executeCode{
             raiseErr 1
         }
     }
+}
+
+function makeIF {
+    param(
+        $CONDITION,
+        $CODE
+    )
+    $conditions = [string]$CONDITION -split "[\<\>\<=\>=]"
+    $operators = [string]$CONDITION -split "[^\<\>\<=\>=]"
+
+    $temp = @()
+    foreach ($thing in $conditions){
+        if (-not ($thing -eq "")){
+            $thing = ($thing -replace "\s", "")
+            $temp += $thing
+        }
+    }
+
+    $conditions = $temp
+
+    $temp = @()
+    foreach ($thing in $operators){
+        if (-not ($thing -eq "")){
+            $thing = ($thing -replace "\s", "")
+            $temp += $thing
+        }
+    }
+
+    $operators = $temp
+
+    for ($i = 0; $i -lt $conditions.Length; $i++){
+        $condition = $conditions[$i]
+        if (contains $condition){
+            $conditions[$i] = getValue $condition
+        }
+        elseif ($condition[0] -eq "'" -and $condition[$condition.Length - 1] -eq "'") {
+            #TODO add string comparisons...
+        }
+        else{
+            try {
+                $conditions[$i] = [int]($condition.Trim())
+            }
+            catch {
+                raiseErr 3
+            }
+        }
+    }
+
+    $value = $false
+
+    if ($operators[0] -eq ">"){
+        $value = $conditions[0] -gt $conditions[1]
+    }
+    elseif ($operators[0] -eq ">="){
+        $value = $conditions[0] -ge $conditions[1]
+    }
+    elseif ($operators[0] -eq "<"){
+        $value = $conditions[0] -lt $conditions[1]
+    }
+    elseif ($operators[0] -eq "<="){
+        $value = $conditions[0] -le $conditions[1]
+    }
+    elseif ($operators[0] -eq "=="){
+        $value = $conditions[0] -eq $conditions[1]
+    }
+
+    return $value
 }
 
 function writeVars{
