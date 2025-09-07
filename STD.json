@@ -19,8 +19,7 @@
         {
             "_PRINT" : {
                 "ARGUMENTS" : {
-                    "PRINTABLE" : "STR, INT, FLOAT",
-                    "PRINTABLE1" : "STR, INT, FLOAT"
+                    "PRINTABLE" : "STR, INT, FLOAT"
                 },
                 "CODE" : [
                     "OUT PRINTABLE"

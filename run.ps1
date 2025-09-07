@@ -186,7 +186,7 @@ function executeCode{
             $vars = @()
             foreach($coder in $codeFunc){
                 if (($coder.split(" ")[0]) -eq "OUT"){
-                    Write-Host "test"
+                    Write-Host (($lineRaw.split(" ")[1]).split("'")[1]).replace("\s", "")
                 }
                 else{
                     $params = @()
@@ -257,7 +257,7 @@ function executeCode{
                             }
                         }
                     }
-
+                    $coder
                     executeCode $coder $vars
                 }
             }
