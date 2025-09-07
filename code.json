@@ -9,7 +9,7 @@
     },
 
     "RUN" : [
-        "_PRINT '17'"
+        "_TEST 17"
     ],
 
     "END" : [
@@ -24,7 +24,9 @@
                     "ARG" : "STR, INT, FLOAT"
                 },
                 "CODE" : [
-                    "ARG = ARG + 1"
+                    "ARG = ARG + 1",
+                    "ARG = ARG + 2",
+                    "ARG = ARG + 3"
                 ]
             }
         } 

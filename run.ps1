@@ -26,7 +26,7 @@ function executeCode{
 
     $split = $line.split("=")[0]
     $val = $line.split("=")[1]
-    $varExists = contains $split
+    $varExists = contains $split $variables
     #writeVars
     if ($varExists){
         if ($val -match "\+" -or $val -match "-" -or $val -match "\*" -or $val -match "/"){
@@ -54,7 +54,7 @@ function executeCode{
             for ($i = 0; $i -lt $things.Length; $i++){
                 $thing = $things[$i]
                 if ($thing -is [string]){
-                    if (contains $thing){
+                    if (contains $thing $variables){
                         $things[$i] = getValue $thing
                     }
                     else{
@@ -159,7 +159,6 @@ function executeCode{
                     foreach ($prop in $func.PSObject.Properties) {
                         if ($prop.Name -eq $fName){
                             #$JSONname = "$fileJ.json"
-
                             $codeFunc = $prop.Value.CODE
 
                             $arguments = $prop.Value.ARGUMENTS
@@ -212,16 +211,17 @@ function executeCode{
                                 if (-not ($types -contains "STR")){
                                     raiseErr 8
                                 }
-
-                                $vars += [PSCustomObject]@{
-                                    Name  = $prop.Name
-                                    Value = $sub[$i].split("'")[1]
-                                    Type  = $prop.Value.GetType().Name
+                                if (-not (contains $prop.name $variables) -and (-not (contains $prop.name $vars))){
+                                    $vars += [PSCustomObject]@{
+                                        Name  = $prop.Name
+                                        Value = $sub[$i].split("'")[1]
+                                        Type  = $prop.Value.GetType().Name
+                                    }
                                 }
                             }
                         }
                         else{
-                            if (contains ($sub[$i])){
+                            if (contains ($sub[$i]) $variables){
                                 $variablesTemp = @{}
                                 foreach ($v in $variables) {
                                     $variablesTemp[$v.Name] = $v.Value
@@ -244,10 +244,12 @@ function executeCode{
                                             raiseErr 8
                                         }
 
-                                        $vars += [PSCustomObject]@{
-                                            Name  = $prop.Name
-                                            Value = $sub[$i]
-                                            Type  = $prop.Value.GetType().Name
+                                        if (-not (contains $prop.name $variables) -and (-not (contains $prop.name $vars))){
+                                            $vars += [PSCustomObject]@{
+                                                Name  = $prop.Name
+                                                Value = $sub[$i]
+                                                Type  = $prop.Value.GetType().Name
+                                            }
                                         }
                                     }
                                 }
@@ -257,7 +259,7 @@ function executeCode{
                             }
                         }
                     }
-                    $coder
+                    #$coder
                     executeCode $coder $vars
                 }
             }
@@ -275,7 +277,6 @@ function executeCode{
             raiseErr 1
         }
     }
-
     writeVars $variables
 }
 
@@ -308,7 +309,7 @@ function makeIF {
 
     for ($i = 0; $i -lt $conditions.Length; $i++){
         $condition = $conditions[$i]
-        if (contains $condition){
+        if (contains $condition $variables){
             $conditions[$i] = getValue $condition
         }
         elseif ($condition[0] -eq "'" -and $condition[$condition.Length - 1] -eq "'") {
@@ -393,7 +394,8 @@ function changeVar{
 
 function contains {
     param(
-        [string]$split
+        [string]$split,
+        $variables
     )
 
     $split = $split -replace "\s", ""
