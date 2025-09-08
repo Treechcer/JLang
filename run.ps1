@@ -185,7 +185,14 @@ function executeCode{
             $vars = @()
             foreach($coder in $codeFunc){
                 if (($coder.split(" ")[0]) -eq "OUT"){
-                    Write-Host (($lineRaw.split(" ")[1]).split("'")[1]).replace("\s", "")
+                    #.split("'")[1]).replace("\s", "")
+                    $value = (($lineRaw.split(" ")[1]))
+                    if (contains $value $variables){
+                        Write-Host "$($variables.Value)"
+                    }
+                    else{
+                        Write-Host $lineRaw.split(" ")[1].split("'")[1].replace("\s", "")
+                    }
                 }
                 else{
                     $params = @()
