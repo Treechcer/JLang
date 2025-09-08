@@ -292,6 +292,7 @@ function makeFunc {
                         $sub[$i] = $variablesTemp[$sub[$i]]
 
                         #TODO MAKE THIS WORK NIFASNBFOABFOSAJD"AIGADIGBALODASKL
+                        # IDON'T KNOW WHEN THIS HAPPENS AJFASFHBIPASHFO BUT I'LL DO THIS TOMORROW!!!
                     }
                     else {
                         try {
