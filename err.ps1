@@ -30,6 +30,9 @@ function raiseErr{
         8{
             $errMessage = "this function doens't accept this type of variable"
         }
+        9{
+            $errMessage = "function have to equal a new variable that was not asighned"
+        }
         Default {
             "WRONG ERROR CODE"
             Exit 1

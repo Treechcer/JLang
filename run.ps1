@@ -1,15 +1,19 @@
 . ./err.ps1
 
+$Global:RETURNVARS = ""
+
 function parse{
     param(
         [string]$file,
         [PSCustomObject]$variables,
         $functions
     )
+
     $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
     #$variables
-    foreach ($lineRaw in $JSON.RUN){
 
+    foreach ($lineRaw in $JSON.RUN){
+        $Global:RETURNVARS = "" 
         executeCode $lineRaw $variables
 
     }
@@ -22,6 +26,11 @@ function executeCode{
         $lineRaw,
         $variables
     )
+
+    Write-Host "SVATÉ PÍSMO"
+    writeVars $variables
+    Write-Host "---"
+
     $line = $lineRaw -replace "\s", ""
 
     $split = $line.split("=")[0]
@@ -127,149 +136,48 @@ function executeCode{
                 }
             }
         }
+        elseif ($lineRaw.split("=")[1] -and -not ($lineRaw[0] -eq "_")) {
+            "_----"
+            $splitter = ($lineRaw.split("="))[1]
+            $willAdd = $false
+
+            $line = ""
+
+            for ($p = 0; $p -lt $splitter.Length; $p++){
+                if ($splitter[$p] -ne " " -and (-not $willAdd)){
+                    $willAdd = $true
+                }
+
+                if ($willAdd){
+                    $line += $splitter[$p]
+                }
+            }
+
+            $line
+
+            $var = ($lineRaw.split("="))[0]
+
+            if (contains $var $variables){
+                raiseErr 9
+            }
+
+            makeFunc $line $variables
+
+            $variables += [PSCustomObject]@{
+                Name  = $splitter
+                Value = $Global:RETURNVARS
+                Type  = $Global:RETURNVARS.GetType().Name
+            }
+
+            writeVars $variables
+
+            #Exit 1
+        }
 
         $isNotVar = $true
 
         if($lineRaw[0] -eq "_"){
-            $exists = $false
-            $fName = $($lineRaw.split(' '))[0]
-            foreach ($f in $functions){
-                if ($fName -eq $f){
-                    $exists = $true
-                    break
-                }
-            }
-            if (-not $exists){
-                raiseErr 6
-            }
-
-            $imports = @()
-            $imports += ($file.split(".")[0])
-            $imports += $JSON.IMPORT
-
-            $codeFunc = ""
-            #$JSONname = ""
-            $laterArgs = @()
-            $passable = @{}
-
-            foreach ($fileJ in $imports){
-                $tempJSON = Get-Content -Path "$fileJ.json" -Raw | ConvertFrom-Json
-
-                foreach ($func in $tempJSON.FUNCTIONS) {
-                    foreach ($prop in $func.PSObject.Properties) {
-                        if ($prop.Name -eq $fName){
-                            #$JSONname = "$fileJ.json"
-                            $codeFunc = $prop.Value.CODE
-
-                            $arguments = $prop.Value.ARGUMENTS
-
-                            $laterArgs = $arguments
-
-                            foreach ($arg in $arguments.PSObject.Properties) {
-                                $key = $arg.Name
-                                $value = $arg.Value
-                                $passable[$key] = $value
-                            }
-
-                            $arguments = $arguments.PSObject.Properties.Count
-
-                            $count = 0
-                            foreach($arg in $arguments){
-                                $count++
-                            }
-                        }
-                    }
-                }
-            }
-
-            $vars = @()
-            foreach($coder in $codeFunc){
-                if (($coder.split(" ")[0]) -eq "OUT"){
-                    #.split("'")[1]).replace("\s", "")
-                    $value = (($lineRaw.split(" ")[1]))
-                    if (contains $value $variables){
-                        Write-Host "$($variables.Value)"
-                    }
-                    else{
-                        Write-Host $lineRaw.split(" ")[1].split("'")[1].replace("\s", "")
-                    }
-                }
-                else{
-                    $params = @()
-                    $sub = $lineRaw.split(" ")
-
-                    for ($i = 1; $i -lt $sub.Length; $i++){
-                        #"------"
-                        #$sub[$i]
-                        #"------"
-
-                        #$passable
-                        if ($sub[$i][0] -eq "'" -and $sub[$i][$sub.Length[$i] - 1] -eq "'"){
-                            $params += $sub[$i].split("'")[1]
-                            
-                            foreach ($prop in $laterArgs.PSObject.Properties) {
-
-                                $types = $prop.Value.split(",")
-
-                                for ($i = 0; $i -lt $types.Length - 1; $i++){
-                                    $types[$i] = ($types[$i] -replace "\s", "")
-                                }
-
-                                if (-not ($types -contains "STR")){
-                                    raiseErr 8
-                                }
-                                if (-not (contains $prop.name $variables) -and (-not (contains $prop.name $vars))){
-                                    $vars += [PSCustomObject]@{
-                                        Name  = $prop.Name
-                                        Value = $sub[$i].split("'")[1]
-                                        Type  = $prop.Value.GetType().Name
-                                    }
-                                }
-                            }
-                        }
-                        else{
-                            if (contains ($sub[$i]) $variables){
-                                $variablesTemp = @{}
-                                foreach ($v in $variables) {
-                                    $variablesTemp[$v.Name] = $v.Value
-                                }
-                                $sub[$i] = $variablesTemp[$sub[$i]]
-
-                                #TODO MAKE THIS WORK NIFASNBFOABFOSAJD"AIGADIGBALODASKL
-                            }
-                            else {
-                                try {
-                                    $sub[$i] = [int] $sub[$i]
-                                    foreach ($prop in $laterArgs.PSObject.Properties) {
-                                        $types = $prop.Value.split(",")
-
-                                        for ($y = 0; $y -lt $types.Length - 1; $y++){
-                                            $types[$y] = ($types[$y] -replace "\s", "")
-                                        }
-
-                                        if (-not ($types -contains "INT")){
-                                            raiseErr 8
-                                        }
-
-                                        if (-not (contains $prop.name $variables) -and (-not (contains $prop.name $vars))){
-                                            $vars += [PSCustomObject]@{
-                                                Name  = $prop.Name
-                                                Value = $sub[$i]
-                                                Type  = $prop.Value.GetType().Name
-                                            }
-                                        }
-                                    }
-                                }
-                                catch {
-                                    raiseErr 3
-                                }
-                            }
-                        }
-                    }
-                    #$coder
-                    executeCode $coder $vars
-                }
-            }
+            makeFunc $lineRaw $variables
         }
         else{
             $isNotVar = $false
@@ -284,7 +192,176 @@ function executeCode{
             raiseErr 1
         }
     }
-    writeVars $variables
+    #writeVars $variables
+}
+
+function makeFunc {
+    param (
+        $lineRaw,
+        $variables
+    )
+    "???"
+    $variables
+
+    $exists = $false
+    $fName = $($lineRaw.split(' '))[0]
+    foreach ($f in $functions){
+        if ($fName -eq $f){
+            $exists = $true
+            break
+        }
+    }
+    if (-not $exists){
+        raiseErr 6
+    }
+
+    $imports = @()
+    $imports += ($file.split(".")[0])
+    $imports += $JSON.IMPORT
+
+    $codeFunc = ""
+    #$JSONname = ""
+    $laterArgs = @()
+    $passable = @{}
+
+    foreach ($fileJ in $imports){
+        $tempJSON = Get-Content -Path "$fileJ.json" -Raw | ConvertFrom-Json
+
+        foreach ($func in $tempJSON.FUNCTIONS) {
+            foreach ($prop in $func.PSObject.Properties) {
+                if ($prop.Name -eq $fName){
+                    #$JSONname = "$fileJ.json"
+                    $codeFunc = $prop.Value.CODE
+
+                    $arguments = $prop.Value.ARGUMENTS
+
+                    $laterArgs = $arguments
+
+                    foreach ($arg in $arguments.PSObject.Properties) {
+                        $key = $arg.Name
+                        $value = $arg.Value
+                        $passable[$key] = $value
+                    }
+
+                    $arguments = $arguments.PSObject.Properties.Count
+
+                    $count = 0
+                    foreach($arg in $arguments){
+                        $count++
+                    }
+                }
+            }
+        }
+    }
+
+    $vars = @()
+    foreach($coder in $codeFunc){
+        #writeVars $variables
+        if (($coder.split(" ")[0]) -eq "OUT"){
+            #.split("'")[1]).replace("\s", "")
+            $value = (($lineRaw.split(" ")[1]))
+            if (contains $value $variables){
+                Write-Host "$($variables.Value)"
+            }
+            else{
+                Write-Host $lineRaw.split(" ")[1].split("'")[1].replace("\s", "")
+            }
+        }
+        elseif (($coder.split(" ")[0]) -eq "RET"){
+            $value = $coder.split(" ")[1]
+            
+            writeVars $variables
+
+            Write-Host "$value"
+
+            #writeVars $variables
+            if ((contains $value $variables) -and $Global:RETURNVARS -eq ""){
+                Write-Host "TESTGHAFAL?FBKAJ"
+                $Global:RETURNVARS = $variables.Value
+            }
+            else{
+                if ($Global:RETURNVARS -eq ""){
+                    Write-Host "GAGAGUGA"
+                    $Global:RETURNVARS = $value
+                }
+            }
+        }
+        else{
+            $params = @()
+            $sub = $lineRaw.split(" ")
+
+            for ($i = 1; $i -lt $sub.Length; $i++){
+                #"------"
+                #$sub[$i]
+                #"------"
+
+                #$passable
+                if ($sub[$i][0] -eq "'" -and $sub[$i][$sub.Length[$i] - 1] -eq "'"){
+                    $params += $sub[$i].split("'")[1]
+                    
+                    foreach ($prop in $laterArgs.PSObject.Properties) {
+
+                        $types = $prop.Value.split(",")
+
+                        for ($i = 0; $i -lt $types.Length - 1; $i++){
+                            $types[$i] = ($types[$i] -replace "\s", "")
+                        }
+
+                        if (-not ($types -contains "STR")){
+                            raiseErr 8
+                        }
+                        if (-not (contains $prop.name $variables) -and (-not (contains $prop.name $vars))){
+                            $vars += [PSCustomObject]@{
+                                Name  = $prop.Name
+                                Value = $sub[$i].split("'")[1]
+                                Type  = $prop.Value.GetType().Name
+                            }
+                        }
+                    }
+                }
+                else{
+                    if (contains ($sub[$i]) $variables){
+                        $variablesTemp = @{}
+                        foreach ($v in $variables) {
+                            $variablesTemp[$v.Name] = $v.Value
+                        }
+                        $sub[$i] = $variablesTemp[$sub[$i]]
+
+                        #TODO MAKE THIS WORK NIFASNBFOABFOSAJD"AIGADIGBALODASKL
+                    }
+                    else {
+                        try {
+                            $sub[$i] = [int] $sub[$i]
+                            foreach ($prop in $laterArgs.PSObject.Properties) {
+                                $types = $prop.Value.split(",")
+
+                                for ($y = 0; $y -lt $types.Length - 1; $y++){
+                                    $types[$y] = ($types[$y] -replace "\s", "")
+                                }
+
+                                if (-not ($types -contains "INT")){
+                                    raiseErr 8
+                                }
+
+                                if (-not (contains $prop.name $variables) -and (-not (contains $prop.name $vars))){
+                                    $vars += [PSCustomObject]@{
+                                        Name  = $prop.Name
+                                        Value = $sub[$i]
+                                        Type  = $prop.Value.GetType().Name
+                                    }
+                                }
+                            }
+                        }
+                        catch {
+                            raiseErr 3
+                        }
+                    }
+                }
+            }
+            #$coder
+            executeCode $coder $vars
+        }
+    }
 }
 
 function makeIF {

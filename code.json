@@ -9,7 +9,7 @@
     },
 
     "RUN" : [
-        "_TEST 17"
+        "var = _TEST 10"
     ],
 
     "END" : [
@@ -27,8 +27,8 @@
                     "ARG = ARG + 1",
                     "ARG = ARG + 2",
                     "ARG = ARG + 3",
-                    "_PRINT ARG",
-                    "_PRINT '10'"
+                    "RET ARG",
+                    ""
                 ]
             }
         } 
