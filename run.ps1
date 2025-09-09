@@ -26,7 +26,7 @@ function executeCode{
 
     $split = $line.split("=")[0]
     $val = $line.split("=")[1]
-    $varExists = (contains $split $variables) -and (-not $lineRaw.split("=")[1] -like "*_*")
+    $varExists = (contains $split $variables) -and (-not ($lineRaw.split("=")[1] -like "*_*"))
     #writeVars
     if ($varExists){
         if ($val -match "\+" -or $val -match "-" -or $val -match "\*" -or $val -match "/"){
@@ -121,10 +121,12 @@ function executeCode{
                 $value = makeIF $lineRaw.WHILE.CONDITION
                 while ($value) {
                     foreach ($parts in $lineRaw.WHILE.CODE){
-                        executeCode $parts
+                        executeCode $parts $variables
                     }
                     $value = makeIF $lineRaw.WHILE.CONDITION
                 }
+
+                return
             }
         }
 
@@ -227,7 +229,10 @@ function makeFunc {
 
     $vars = @()
     foreach($coder in $codeFunc){
-        if (($coder.split(" ")[0]) -eq "OUT"){
+        if($coder -is [pscustomobject]){
+            executeCode $coder $vars
+        }
+        elseif (($coder.split(" ")[0]) -eq "OUT"){
             #.split("'")[1]).replace("\s", "")
             $value = (($lineRaw.split(" ")[1]))
 
@@ -285,14 +290,26 @@ function makeFunc {
                 }
                 else{
                     if (contains ($sub[$i]) $variables){
-                        $variablesTemp = @{}
-                        foreach ($v in $variables) {
-                            $variablesTemp[$v.Name] = $v.Value
-                        }
-                        $sub[$i] = $variablesTemp[$sub[$i]]
+                        $sub[$i]
 
-                        #TODO MAKE THIS WORK NIFASNBFOABFOSAJD"AIGADIGBALODASKL
-                        # IDON'T KNOW WHEN THIS HAPPENS AJFASFHBIPASHFO BUT I'LL DO THIS TOMORROW!!!
+                        $value = (getValue $sub[$i])
+
+                        if (-not (contains $sub[$i] $variables) -and (-not (contains $sub[$i] $vars))){
+                            $vars += [PSCustomObject]@{
+                                Name  = $sub[$i]
+                                Value = $value 
+                                Type  = $value.GetType().Name
+                            }
+                        }
+
+                        #$variablesTemp = @{}
+                        #foreach ($v in $variables) {
+                        #    $variablesTemp[$v.Name] = $v.Value
+                        #}
+                        #$sub[$i] = $variablesTemp[$sub[$i]]
+
+                        #TODO MAKE THIS WORK
+                        
                     }
                     else {
                         try {

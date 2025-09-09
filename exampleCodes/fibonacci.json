@@ -1,0 +1,67 @@
+{
+    "IMPORT" : [
+        "STD"    
+    ],
+
+    "INIT" : {
+        "fibN" : 10,
+        "lastFibNum" : 0
+    },
+
+    "RUN" : [
+        "lastFibNum = _FIB fibN",
+        "_PRINT lastFibNum"
+    ],
+
+    "END" : [
+
+    ],
+
+
+    "FUNCTIONS" : [
+        {
+            "_FIB" : {
+                "ARGUMENTS" : {
+                    "num" : "INT"
+                },
+                "CODE":[
+                    "i = 0",
+                    "a = 0",
+                    "b = 1",
+                    "c = 0",
+                    {
+                        "WHILE" : {
+                            "CONDITION" : "i < num",
+                            "CODE" : [
+                                "_PRINT 'TEST'",
+                                {
+                                    "IF":
+                                    {
+                                        "CONDITION" : "i == 0",
+                                        "CODE" : ["_PRINT a"]
+                                    },
+                                    "ELSEIF" :
+                                    {
+                                        "CONDITION" : "i == 1",
+                                        "CODE" : ["_PRINT b"]
+                                    },
+                                    "ELSE" : {
+                                        "CODE" : [
+                                            "c = a + b",
+                                            "_PRINT C",
+                                            "a = b",
+                                            "b = c"
+                                        ] 
+                                    }
+
+                                },
+                                "i = i + 1"
+                            ]
+                        }
+                    },
+                    "RET c"
+                ]
+            }
+        }
+    ]
+}

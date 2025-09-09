@@ -25,6 +25,18 @@
                     "OUT PRINTABLE"
                 ]
             }
+        },
+        {
+            "_PWR" : {
+                "ARGUMENTS" : {
+                    "ARG" : "INT"
+                },
+                "CODE" : [
+                    "ARG = ARG * ARG",
+                    "RET ARG"
+                ]
+            }
         } 
+
     ]
 }
