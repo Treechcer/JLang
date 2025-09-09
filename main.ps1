@@ -1,5 +1,5 @@
 param(
-    [string]$file = "code.json"
+    [string]$file = "exampleCodes/fibonacci.json"
 )
 
 

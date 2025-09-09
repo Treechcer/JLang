@@ -93,7 +93,7 @@ function executeCode{
         if ($lineRaw -is [pscustomobject]) {
             if ($lineRaw.PSObject.Properties.Name -contains "IF") {
 
-                $value = makeIF $lineRaw.IF.CONDITION
+                $value = makeIF $lineRaw.IF.CONDITION $variables
 
                 if ($value){
                     foreach ($parts in $lineRaw.IF.CODE){
@@ -102,7 +102,7 @@ function executeCode{
                 }
                 if (-not $value -and $lineRaw.PSObject.Properties.Name -contains "ELSEIF") {
                     for ($i = 0; $i -lt $lineRaw.ELSEIF.Length; $i++){
-                        $value = makeIF $lineRaw.ELSEIF[$i].CONDITION
+                        $value = makeIF $lineRaw.ELSEIF[$i].CONDITION $variables
                         if ($value){
                             foreach ($parts in $lineRaw.ELSEIF[$i].CODE){
                                 executeCode $parts
@@ -118,12 +118,12 @@ function executeCode{
                 }
             }
             elseif ($lineRaw.PSObject.Properties.Name -contains "WHILE") {
-                $value = makeIF $lineRaw.WHILE.CONDITION
+                $value = makeIF $lineRaw.WHILE.CONDITION $variables
                 while ($value) {
                     foreach ($parts in $lineRaw.WHILE.CODE){
                         executeCode $parts $variables
                     }
-                    $value = makeIF $lineRaw.WHILE.CONDITION
+                    $value = makeIF $lineRaw.WHILE.CONDITION $variables
                 }
 
                 return
@@ -145,7 +145,7 @@ function executeCode{
             }
             else {
                 $variables += [PSCustomObject]@{
-                    Name  = $var
+                    Name  = $name
                     Value = $val
                     Type  = $val.GetType().Name
                 }
@@ -155,12 +155,12 @@ function executeCode{
             $isNotVar = $false
         }
 
-        if (-not ($line -match "=") -and -not ($isNotVar)){
+        if (-not ($line -match "=") -and (-not $isNotVar)){
             raiseErr 2
         }
 
-        $value = $line.Split("=")[1]
-        if ($value -eq "" -and -not ($isNotVar)){
+        $value = $line.Split("=")
+        if ($value[1] -eq "" -and (-not $isNotVar)){
             raiseErr 1
         }
     }
@@ -348,7 +348,8 @@ function makeFunc {
 
 function makeIF {
     param(
-        $CONDITION
+        $CONDITION,
+        $variables
     )
     $conditions = [string]$CONDITION -split "[\<\>\<=\>=]"
     $operators = [string]$CONDITION -split "[^\<\>\<=\>=]"
@@ -410,6 +411,25 @@ function makeIF {
     }
 
     return $value
+}
+
+function createVar(){
+
+    #ot in use now btw.
+
+    param(
+        $name,
+        $value,
+        $variables
+    )
+
+    $variables += [PSCustomObject]@{
+        Name  = $name
+        Value = $value
+        Type  = $value.GetType().Name
+    }
+
+    return $variables
 }
 
 function writeVars{
