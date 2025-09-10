@@ -55,7 +55,7 @@ function executeCode{
                 $thing = $things[$i]
                 if ($thing -is [string]){
                     if (contains $thing $variables){
-                        $things[$i] = getValue $thing
+                        $things[$i] = getValue $thing $variables
                     }
                     else{
                         try {
@@ -87,13 +87,17 @@ function executeCode{
                 $value = $value.split("'")[1]
             }
         }
-        changeVar $split $value
+        $variables = changeVar $split $value
     }
     else{
         if ($lineRaw -is [pscustomobject]) {
             if ($lineRaw.PSObject.Properties.Name -contains "IF") {
+                
+                ";;;;;;;;;;;;;;;;;;;;;;;;"
+                writeVars $variables
+                ",,,,,,,,,,,,,,,,,,,,,,,,"
 
-                $value = makeIF $lineRaw.IF.CONDITION $variables
+                $value = makeIF -CONDITION $lineRaw.IF.CONDITION -variables $variables
 
                 if ($value){
                     foreach ($parts in $lineRaw.IF.CODE){
@@ -125,23 +129,27 @@ function executeCode{
                     }
                     $value = makeIF $lineRaw.WHILE.CONDITION $variables
                 }
-
-                return
             }
         }
 
         $isNotVar = $true
+        try {
+            $ifFunc = $lineRaw.split("=")[1] -like "*_*"   
+        }
+        catch {
+            $ifFunc = $false
+        }
 
         if($lineRaw[0] -eq "_"){
             makeFunc
         }
-        elseif ($lineRaw.split("=")[1] -like "*_*"){
+        elseif ($ifFunc){
             $var = $lineRaw.split("=")[0].Trim()
             $func = $lineRaw.split("=")[1].Trim()
             $val = makeFunc $func
 
             if (contains $var $variables) {
-                changeVar $var $val
+                $variables = changeVar $var $val
             }
             else {
                 $variables += [PSCustomObject]@{
@@ -162,6 +170,10 @@ function executeCode{
         $value = $line.Split("=")
         if ($value[1] -eq "" -and (-not $isNotVar)){
             raiseErr 1
+        }
+        elseif ($line.split("="[1])) {
+            Write-Host "$value"
+            $variables = createVar $value[0] $value[1] $variables
         }
     }
     writeVars $variables
@@ -240,7 +252,12 @@ function makeFunc {
                 Write-Host "$($variables.Value)"
             }
             else{
-                Write-Host $lineRaw.split(" ")[1].split("'")[1].replace("\s", "")
+                try {
+                    Write-Host $lineRaw.split(" ")[1].split("'")[1].replace("\s", "")
+                }
+                catch {
+                    
+                }
             }
         }
         elseif (($coder.split(" ")[0]) -eq "RET"){
@@ -292,7 +309,7 @@ function makeFunc {
                     if (contains ($sub[$i]) $variables){
                         $sub[$i]
 
-                        $value = (getValue $sub[$i])
+                        $value = (getValue $sub[$i] $variables)
 
                         if (-not (contains $sub[$i] $variables) -and (-not (contains $sub[$i] $vars))){
                             $vars += [PSCustomObject]@{
@@ -351,6 +368,12 @@ function makeIF {
         $CONDITION,
         $variables
     )
+
+    "------------------------------------------------"
+    Write-Host $CONDITION
+    Write-Host $variables
+    "------------------------------------------------"
+
     $conditions = [string]$CONDITION -split "[\<\>\<=\>=]"
     $operators = [string]$CONDITION -split "[^\<\>\<=\>=]"
 
@@ -376,8 +399,9 @@ function makeIF {
 
     for ($i = 0; $i -lt $conditions.Length; $i++){
         $condition = $conditions[$i]
+
         if (contains $condition $variables){
-            $conditions[$i] = getValue $condition
+            $conditions[$i] = getValue $condition $variables
         }
         elseif ($condition[0] -eq "'" -and $condition[$condition.Length - 1] -eq "'") {
             #TODO add string comparisons...
@@ -414,9 +438,6 @@ function makeIF {
 }
 
 function createVar(){
-
-    #ot in use now btw.
-
     param(
         $name,
         $value,
@@ -443,7 +464,8 @@ function writeVars{
 
 function getValue{
     param(
-        [string]$name
+        [string]$name,
+        $variables
     )
 
     $name = $name -replace "\s", ""
@@ -455,10 +477,11 @@ function getValue{
     }
 }
 
-function changeVar{
+function changeVar {
     param(
         [string]$varName,
-        $value
+        $value,
+        $variables
     )
 
     $varName = $varName -replace "\s", ""
@@ -476,6 +499,8 @@ function changeVar{
     if (-not $found){
         raiseErr 3
     }
+
+    return $variables
 }
 
 function contains {
