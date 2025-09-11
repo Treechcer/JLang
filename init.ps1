@@ -1,3 +1,5 @@
+. ./varWork.ps1
+
 function test {
     "TEST"
 }
@@ -12,11 +14,7 @@ function initV {
     $variables = @()
 
     foreach ($prop in $JSON.INIT.PSObject.Properties) {
-        $variables += [PSCustomObject]@{
-            Name  = $prop.Name
-            Value = $prop.Value
-            Type  = $prop.Value.GetType().Name
-        }
+        $variables = createVar $prop.Name $prop.Value $variables
     }
 
     return $variables

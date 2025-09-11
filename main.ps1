@@ -1,9 +1,9 @@
 param(
-    [string]$file = "exampleCodes/fibonacci.json"
+    [string]$file = "code.json"
 )
 
 
-$global:version = "0.6.2"
+$global:version = "0.1.0"
 
 . .\init.ps1
 . .\run.ps1
@@ -38,13 +38,19 @@ else {
 
     $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
 
-    $functions = @()
+    #---------------------------
 
-    foreach($import in $JSON.IMPORT){
-        $functions += initF "$import.json"
-    }
+    #TODO: add functions later
 
-    $functions += initF "$file"
+    #$functions = @()
+
+    #foreach($import in $JSON.IMPORT){
+    #    $functions += initF "$import.json"
+    #}
+
+    #$functions += initF "$file"
+
+    #---------------------------
 
     #$variables.GetType()
 

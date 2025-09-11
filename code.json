@@ -8,8 +8,8 @@
     },
 
     "RUN" : [
-        "bum = _PWR 5",
-        "_PRINT bum"
+        "i = 10",
+        "bum = 10"
     ],
 
     "END" : [
