@@ -33,6 +33,9 @@ function raiseErr{
         9{
             $errMessage = "THIS IS IN FUNCTIONS, SOME CONDE I DON'T UNDERSTAND WHEN IT HAPPENS, IF THIS HAPPEND I CAN FIX IT OR KNOW WHAT IS DOES"
         }
+        10{
+            $errCode = "you have to use real conditional (<, >, ==, >=, <=)"
+        }
         Default {
             "WRONG ERROR CODE"
             Exit 1

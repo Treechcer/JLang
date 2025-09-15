@@ -84,3 +84,52 @@ function contains {
 
     return $false
 }
+
+function evalCondition{
+    param(
+        $condition,
+        $variables
+    )
+
+    $conditional = ""
+    $op = ""
+
+    if ($condition -match ">"){
+        $conditional = "-gt"
+        $op = ">"
+    }
+    elseif ($condition -match "<"){
+        $conditional = "-lt"
+        $op = "<"
+    }
+    elseif ($condition -match "=="){
+        $conditional = "-eq"
+        $op = "=="
+    }
+    elseif ($condition -match "<="){
+        $conditional = "-le"
+        $op = "<="
+    }
+    elseif ($condition -match ">="){
+        $conditional = "-ge"
+        $op = ">="
+    }
+    else{
+        raiseErr 10
+    }
+
+    $left = $condition.split($op)[0].Trim()
+    $right = $condition.split($op)[1].Trim()
+
+    if (contains $left $variables){
+        $left = getValue $left $variables
+    }
+
+    if (contains $right $variables){
+        $right = getValue $right $variables
+    }
+
+    $cond = "$left $conditional $right"
+
+    return Invoke-Expression $cond 
+}
