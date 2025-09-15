@@ -10,7 +10,14 @@
 
     "RUN" : [
         "bum = 10 + 1",
-        "i = i + 1"
+        "i = i + 1",
+        {
+            "NAME" : "WHILE",
+            "CONDITION" : "i < 100",
+            "CODE" : [
+                "i = i + 1"
+            ]
+        }
     ],
 
     "END" : [

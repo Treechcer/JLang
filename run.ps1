@@ -27,7 +27,7 @@ function executeCode{
     )
 
     if ($lineRaw -is [string]){
-        doVars
+        $variables = doVars $lineRaw $variables
     }
     elseif ($lineRaw -is [PSCustomObject]){
         checkBlockCode $variables $lineRaw
@@ -53,22 +53,38 @@ function doVars{
             $createVar = $false
         }
 
-        writeVars "$rightSide"
-
         if (contains $rightSide $variables){
-            $value = getValue $rightSide $variables
-            writeVars "contejns"
+            $val = getValue $rightSide $variables
         }
-        elseif ($rightSide -match "[\+\-\*/]") {
-            $rightSideSplit -split("[\+\-\*/]")
+        elseif ($rightSide -match "[\+\-\*/]") { 
 
-            $val = Invoke-Expression $rightSide
+            $split = $rightSide -split "[\+\-\*/]"
+            $ops = $rightSide -split "[^\+\-\*/]"
 
-            writeVars "6554545454"
+            $split = $split -ne ""
+            $ops = $ops -ne ""
+
+            for ($i = 0; $i -lt $split.Length; $i++){
+                $split[$i] = $split[$i].Trim()
+            }
+
+            for ($i = 0; $i -lt $split.Length; $i++){
+                if (contains $split[$i] $variables){
+                    $split[$i] = getValue $split[$i] $variables
+                }
+            }
+
+            $expr = ""
+
+            for ($i = 0; $i -lt $ops.Length; $i++){
+                $expr += [string] $split[$i] + [string] $ops[$i]
+            }
+            $expr += $split[$split.Length - 1]
+
+            $val = Invoke-Expression $expr
         }
         else{
             $val = $rightSide
-            writeVars "faifnhoafpganhbuiog"
         }
         
         if ($createVar){
