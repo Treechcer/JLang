@@ -7,8 +7,10 @@ function parse{
         $variables,
         $functions
     )
+
     $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
     #$variables
+
     foreach ($lineRaw in $JSON.RUN){
 
         $variables = executeCode $lineRaw $variables
@@ -25,12 +27,32 @@ function executeCode{
     )
 
     if ($lineRaw -like "*=*"){
-        if (contains ($lineRaw.split("=")[0].Trim()) $variables){
-            changeVar $lineRaw.split("=")[0].Trim() $lineRaw.split("=")[1].Trim() $variables
+        $leftSide = ($lineRaw.split("=")[0].Trim())
+        $rightSide = ($lineRaw.split("=")[1].Trim())
+
+        $createVar = $true
+
+        if (contains $leftSide $variables){
+            $createVar = $false
+        }
+
+        if (contains $rightSide $variables){
+            $value = getValue $rightSide $variables
+        }
+        elseif ($rightSide -match "[\+\-\*/]") {
+            $val = Invoke-Expression $rightSide
+        }
+        else{
+            $val = $rightSide
+            
+        }
+        
+        if ($createVar){
+            $variables = createVar $leftSide $rightSide $variables
             return $variables
         }
         else{
-            $variables = createVar $lineRaw.split("=")[0].Trim() $lineRaw.split("=")[1].Trim() $variables
+            $variables = changeVar $leftSide $val $variables
             return $variables
         }
     }

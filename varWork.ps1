@@ -5,8 +5,10 @@ function createVar {
         $variables
     )
 
-    $name
-    $value
+    #$name
+    #$value
+
+    $variables.GetType().Name #btw. if you delete tis it will crap itself and won't work
 
     $variables += [PSCustomObject]@{
         Name  = $name
