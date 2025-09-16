@@ -116,4 +116,45 @@ function checkBlockCode{
         
         return $variables
     }
+
+    if ($lineRaw.NAME -eq "IF"){
+        $cond = evalCondition $lineRaw.IF.CONDITION $variables
+
+        if ($cond){
+            foreach ($cml in $lineRaw.IF.CODE){
+                $variables = executeCode $cml $variables
+            }
+
+            return $variables
+        }
+
+        try {
+            foreach ($elseif in $lineRaw.ELSEIF){
+                $cond = evalCondition $elseif.CONDITION $variables
+                if ($cond){
+                    foreach ($cml in $elseif.CODE){
+                        $variables = executeCode $cml $variables
+                    }
+
+                    return $variables
+                }
+            }
+        }
+        catch {
+
+        }
+
+        try {
+            foreach ($cml in $lineRaw.ELSE.CODE){
+                $variables = executeCode $cml $variables
+            }
+
+            return $variables
+        }
+        catch {
+            return $variables        
+        }
+
+        return $variables
+    }
 }

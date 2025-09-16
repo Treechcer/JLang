@@ -3,7 +3,7 @@ param(
 )
 
 
-$global:version = "0.3.0"
+$global:version = "0.4.0"
 
 . .\init.ps1
 . .\run.ps1

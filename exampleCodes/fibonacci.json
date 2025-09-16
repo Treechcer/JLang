@@ -1,102 +1,34 @@
 {
-    "IMPORT" : [
-        "STD"    
+    "IMPORT": [
+        "STD"
     ],
 
-    "INIT" : {
-        "fibN" : 10,
-        "lastFibNum" : 0,
-        "num" : 10,
-        "i" : 0,
-        "a" : 0,
-        "b" : 1,
-        "c" : 0
+    "INIT": {
+        "n": 10,
+        "i": 0,
+        "a": 0,
+        "b": 1,
+        "tmp": 0
     },
 
-    "RUN" : [
-
+    "RUN": [
         {
-            "WHILE" : {
-                "CONDITION" : "i < num",
-                "CODE" : [
-                    "_PRINT i",
-                    {
-                        "IF":
-                        {
-                            "CONDITION" : "i == 0",
-                            "CODE" : ["_PRINT a"]
-                        },
-                        "ELSEIF" :
-                        {
-                            "CONDITION" : "i == 1",
-                            "CODE" : ["_PRINT b"]
-                        },
-                        "ELSE" : {
-                            "CODE" : [
-                                "c = a + b",
-                                "_PRINT c",
-                                "a = b",
-                                "b = c"
-                            ] 
-                        }
-
-                    },
-                    "i = i + 1"
-                ]
-            }
-        },
-        "_PRINT c"
-    ],
-
-    "END" : [
-
-    ],
-
-
-    "FUNCTIONS" : [
-        {
-            "_FIB" : {
-                "ARGUMENTS" : {
-                    "num" : "INT"
-                },
-                "CODE":[
-                    "i = 0",
-                    "a = 0",
-                    "b = 1",
-                    "c = 0",
-                    {
-                        "WHILE" : {
-                            "CONDITION" : "i < num",
-                            "CODE" : [
-                                "_PRINT i",
-                                {
-                                    "IF":
-                                    {
-                                        "CONDITION" : "i == 0",
-                                        "CODE" : ["_PRINT a"]
-                                    },
-                                    "ELSEIF" :
-                                    {
-                                        "CONDITION" : "i == 1",
-                                        "CODE" : ["_PRINT b"]
-                                    },
-                                    "ELSE" : {
-                                        "CODE" : [
-                                            "c = a + b",
-                                            "_PRINT C",
-                                            "a = b",
-                                            "b = c"
-                                        ] 
-                                    }
-
-                                },
-                                "i = i + 1"
-                            ]
-                        }
-                    },
-                    "RET c"
-                ]
-            }
+            "NAME": "WHILE",
+            "CONDITION": "i < n",
+            "CODE": [
+                "tmp = a + b",
+                "a = b",
+                "b = tmp",
+                "i = i + 1"
+            ]   
         }
+    ],
+
+    "END": [
+
+    ],
+
+    "FUNCTIONS": [
+        
     ]
 }

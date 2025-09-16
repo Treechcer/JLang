@@ -102,9 +102,9 @@ function evalCondition{
         $conditional = "-lt"
         $op = "<"
     }
-    elseif ($condition -match "=="){
+    elseif ($condition -match "="){
         $conditional = "-eq"
-        $op = "=="
+        $op = "="
     }
     elseif ($condition -match "<="){
         $conditional = "-le"
