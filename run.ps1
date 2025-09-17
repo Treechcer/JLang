@@ -27,7 +27,12 @@ function executeCode{
     )
 
     if ($lineRaw -is [string]){
-        $variables = doVars $lineRaw $variables
+        if ($lineRaw -like "*=*"){
+            $variables = doVars $lineRaw $variables
+        }
+        elseif ($lineRaw -like "*_*"){
+            $variables = callFunc $lineRaw $variables
+        }
     }
     elseif ($lineRaw -is [PSCustomObject]){
         checkBlockCode $variables $lineRaw
@@ -43,58 +48,56 @@ function doVars{
         $variables
     )
 
-    if ($lineRaw -like "*=*"){
-        $leftSide = ($lineRaw.split("=")[0].Trim())
-        $rightSide = ($lineRaw.split("=")[1].Trim())
+    $leftSide = ($lineRaw.split("=")[0].Trim())
+    $rightSide = ($lineRaw.split("=")[1].Trim())
 
-        $createVar = $true
+    $createVar = $true
 
-        if (contains $leftSide $variables){
-            $createVar = $false
+    if (contains $leftSide $variables){
+        $createVar = $false
+    }
+
+    if (contains $rightSide $variables){
+        $val = getValue $rightSide $variables
+    }
+    elseif ($rightSide -match "[\+\-\*/]") { 
+
+        $split = $rightSide -split "[\+\-\*/]"
+        $ops = $rightSide -split "[^\+\-\*/]"
+
+        $split = $split -ne ""
+        $ops = $ops -ne ""
+
+        for ($i = 0; $i -lt $split.Length; $i++){
+            $split[$i] = $split[$i].Trim()
         }
 
-        if (contains $rightSide $variables){
-            $val = getValue $rightSide $variables
-        }
-        elseif ($rightSide -match "[\+\-\*/]") { 
-
-            $split = $rightSide -split "[\+\-\*/]"
-            $ops = $rightSide -split "[^\+\-\*/]"
-
-            $split = $split -ne ""
-            $ops = $ops -ne ""
-
-            for ($i = 0; $i -lt $split.Length; $i++){
-                $split[$i] = $split[$i].Trim()
+        for ($i = 0; $i -lt $split.Length; $i++){
+            if (contains $split[$i] $variables){
+                $split[$i] = getValue $split[$i] $variables
             }
-
-            for ($i = 0; $i -lt $split.Length; $i++){
-                if (contains $split[$i] $variables){
-                    $split[$i] = getValue $split[$i] $variables
-                }
-            }
-
-            $expr = ""
-
-            for ($i = 0; $i -lt $ops.Length; $i++){
-                $expr += [string] $split[$i] + [string] $ops[$i]
-            }
-            $expr += $split[$split.Length - 1]
-
-            $val = Invoke-Expression $expr
         }
-        else{
-            $val = $rightSide
+
+        $expr = ""
+
+        for ($i = 0; $i -lt $ops.Length; $i++){
+            $expr += [string] $split[$i] + [string] $ops[$i]
         }
-        
-        if ($createVar){
-            $variables = createVar $leftSide $rightSide $variables
-            return $variables
-        }
-        else{
-            $variables = changeVar $leftSide $val $variables
-            return $variables
-        }
+        $expr += $split[$split.Length - 1]
+
+        $val = Invoke-Expression $expr
+    }
+    else{
+        $val = $rightSide
+    }
+    
+    if ($createVar){
+        $variables = createVar $leftSide $rightSide $variables
+        return $variables
+    }
+    else{
+        $variables = changeVar $leftSide $val $variables
+        return $variables
     }
 }
 
@@ -157,4 +160,12 @@ function checkBlockCode{
 
         return $variables
     }
+}
+
+function callFunc {
+    param (
+        $lineRaw,
+        $variables
+    )
+    
 }
