@@ -17,25 +17,29 @@
 
     "FUNCTIONS" : [
         {
-            "_PRINT" : {
-                "ARGUMENTS" : {
-                    "PRINTABLE" : "STR, INT, FLOAT"
-                },
-                "CODE" : [
-                    "OUT PRINTABLE"
-                ]
-            }
+            "NAME" : "_PRINT", 
+            "ARGUMENTS" : [
+                {
+                    "NAME" : "PRINTABLE",
+                    "TYPE" : "STR, INT, FLOAT"
+                }
+            ],
+            "CODE" : [
+                "OUT PRINTABLE"
+            ]
         },
         {
-            "_PWR" : {
-                "ARGUMENTS" : {
-                    "ARG" : "INT"
-                },
-                "CODE" : [
-                    "ARG = ARG * ARG",
-                    "RET ARG"
-                ]
-            }
+            "NAME" : "_PWR",
+            "ARGUMENTS" : [
+                {
+                    "NAME" : "ARG",
+                    "TYPE" : "INT"
+                }
+            ],
+            "CODE" : [
+                "ARG = ARG * ARG",
+                "RET ARG"
+            ]
         } 
 
     ]

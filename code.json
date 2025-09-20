@@ -9,42 +9,7 @@
     },
 
     "RUN" : [
-        "bum = 10 + 1",
-        {
-            "NAME" : "WHILE",
-            "CONDITION" : "i < 5",
-            "CODE" : [
-                "i = i + 1"
-            ]
-        },
-        {
-            "NAME" : "IF",
-            "IF" : {
-                "CONDITION" : "i < 5",
-                "CODE" : [
-                    "i = i - 2"
-                ]
-            },
-            "ELSEIF" : [
-                {
-                    "CONDITION" : "i = 5",
-                    "CODE" : [
-                        "i = 7"
-                    ]
-                },
-                {
-                    "CONDITION" : "i = 75",
-                    "CODE" : [
-                        "i = 32"
-                    ]
-                }
-            ],
-            "ELSE" : {
-                "CODE" : [
-                    "i = bum"
-                ]
-            }
-        }
+        "_PRINT aa"
     ],
 
     "END" : [

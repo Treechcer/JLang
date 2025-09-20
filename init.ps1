@@ -11,7 +11,7 @@ function initV {
 
     $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
 
-    $variables = @()
+    $variables = ""
 
     foreach ($prop in $JSON.INIT.PSObject.Properties) {
         $variables = createVar $prop.Name $prop.Value $variables
@@ -29,12 +29,12 @@ function initF {
 
     $functions = @()
     for ($i = 0; $i -lt $JSON.FUNCTIONS.Length; $i++) {
-        foreach ($prop in $JSON.FUNCTIONS[$i].PSObject.Properties){
-            if ($prop.Name[0] -ne "_"){
-                raiseErr 5
-            }
-            $functions += $prop.Name
+        Write-Host "$($JSON.FUNCTIONS[$i].PSObject.Properties)"
+        if ($JSON.FUNCTIONS[$i].NAME[0] -ne "_"){
+            raiseErr 5
         }
+
+        $functions += $JSON.FUNCTIONS[$i]
     }
 
     return $functions

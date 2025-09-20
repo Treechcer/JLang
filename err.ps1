@@ -34,7 +34,10 @@ function raiseErr{
             $errMessage = "THIS IS IN FUNCTIONS, SOME CONDE I DON'T UNDERSTAND WHEN IT HAPPENS, IF THIS HAPPEND I CAN FIX IT OR KNOW WHAT IS DOES"
         }
         10{
-            $errCode = "you have to use real conditional (<, >, ==, >=, <=)"
+            $errMessage = "you have to use real conditional (<, >, ==, >=, <=)"
+        }
+        11 {
+            $errMessage = "invalid ammount of inputs into this function"
         }
         Default {
             "WRONG ERROR CODE"

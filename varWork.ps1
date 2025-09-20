@@ -8,7 +8,7 @@ function createVar {
     #$name
     #$value
 
-    $variables.GetType().Name #btw. if you delete tis it will crap itself and won't work
+    #$variables.GetType().Name #btw. if you delete tis it will crap itself and won't work - I was just stupid, I never parsed '$variables' into this function lmao. but why did it fix it tho?
 
     $variables += [PSCustomObject]@{
         Name  = $name
@@ -17,6 +17,19 @@ function createVar {
     }
 
     return $variables 
+}
+
+function createReturnVar {
+    param (
+        $name,
+        $value
+    )
+
+    return [PSCustomObject]@{
+        Name  = $name
+        Value = $value
+        Type  = $value.GetType().Name
+    }
 }
 
 function writeVars{

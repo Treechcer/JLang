@@ -1,5 +1,6 @@
 . ./err.ps1
 . ./varWork.ps1
+. ./functionWork.ps1
 
 function parse{
     param(
@@ -7,6 +8,8 @@ function parse{
         $variables,
         $functions
     )
+
+    $global:functions = $functions
 
     $JSON = Get-Content -Path "$file" -Raw | ConvertFrom-Json
     #$variables
@@ -163,9 +166,52 @@ function checkBlockCode{
 }
 
 function callFunc {
+
+    #-----------------------------------
+    #TODO - Add WORKING fVars (function Variables)
+    #     - make the variables 'disapeas' when functions ends
+    #     - also make it working lol 
+    #-----------------------------------
+
     param (
         $lineRaw,
         $variables
     )
     
+    $fName = $lineRaw.split(" ")[0]
+    $exists = checkFunction $fName
+
+    if ($exists){
+        #$unchangedVars = $variables
+
+        $index = getIndex $fName 
+        $fVars = @()
+
+        $counter = 1
+
+        if ($lineRaw.split(" ").Length-1 -ne $global:functions[$index].ARGUMENTS.Length){
+            raiseErr 11
+        }
+
+        foreach ($arg in $global:functions[$index].ARGUMENTS){
+            $fVars += createReturnVar $arg.NAME $lineRaw.split(" ")[$counter]
+            $counter++
+            #FVARS DOES NOT WORK IDK WHY I'LL FIX IT TOMORROW
+        }
+
+        Write-Host "$fVars"
+        $variables += $fVars
+
+        Write-Host "$variables"
+
+        foreach ($l in $global:functions[$index].CODE){
+            if ($l.split(" ")[0]){
+                #Write-Host $l.split(" ")[0] #this is temp, I have to add function variables
+            }
+            $variables = executeCode $l $variables
+        }
+    }
+    else{
+        raiseErr 6
+    }
 }

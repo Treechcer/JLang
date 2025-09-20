@@ -3,7 +3,7 @@ param(
 )
 
 
-$global:version = "0.4.1"
+$global:version = "0.4.2"
 
 . .\init.ps1
 . .\run.ps1
@@ -42,13 +42,13 @@ else {
 
     #TODO: add functions later
 
-    #$functions = @()
+    $functions = @()
 
-    #foreach($import in $JSON.IMPORT){
-    #    $functions += initF "$import.json"
-    #}
+    foreach($import in $JSON.IMPORT){
+        $functions += initF "$import.json"
+    }
 
-    #$functions += initF "$file"
+    $functions += initF "$file"
 
     #---------------------------
 
