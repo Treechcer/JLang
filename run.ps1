@@ -196,13 +196,9 @@ function callFunc {
         foreach ($arg in $global:functions[$index].ARGUMENTS){
             $fVars += createReturnVar $arg.NAME $lineRaw.split(" ")[$counter]
             $counter++
-            #FVARS DOES NOT WORK IDK WHY I'LL FIX IT TOMORROW
         }
-
-        Write-Host "$fVars"
-        $variables += $fVars
-
-        Write-Host "$variables"
+        
+        $variables = $variables + $fVars
 
         foreach ($l in $global:functions[$index].CODE){
             if ($l.split(" ")[0]){
@@ -210,6 +206,8 @@ function callFunc {
             }
             $variables = executeCode $l $variables
         }
+
+        return $variables
     }
     else{
         raiseErr 6
